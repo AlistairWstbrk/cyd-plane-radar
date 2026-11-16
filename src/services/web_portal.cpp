@@ -76,6 +76,24 @@ bool parseBody(JsonDocument& doc) {
 
 String s_ota_err;
 bool s_ota_started = false;
+bool s_ota_locked = false;
+
+// The aircraft feed (and the airport lookup) run in background tasks and each
+// HTTPS request needs ~40 KB. An upload that overlaps one runs the web server
+// out of memory, so a firmware upload holds the network lock from before its
+// body is read until it finishes. Fetches simply wait and resume afterwards.
+void otaLock() {
+  if (s_ota_locked) return;
+  s_ota_locked = services::adsb::netLock(20000);
+  Serial.printf("OTA: network %s, heap %u (largest block %u)\n", s_ota_locked ? "paused" : "busy",
+                ESP.getFreeHeap(), ESP.getMaxAllocHeap());
+}
+
+void otaUnlock() {
+  if (!s_ota_locked) return;
+  services::adsb::netUnlock();
+  s_ota_locked = false;
+}
 
 void otaFail(const char* what) {
   if (s_ota_err.length()) return;
@@ -132,6 +150,7 @@ void handleOtaDone() {
   s.sendContent("");
   s_ota_started = false;
   if (!ok) {
+    otaUnlock();
     ui::status::firmwareUpdate(-1);
     delay(2500);
     ui::requestRedraw();
@@ -142,6 +161,22 @@ void handleOtaDone() {
   delay(800);
   ESP.restart();
 }
+
+/** POST /u: takes the network lock in canHandle(), i.e. before the body is parsed. */
+class OtaRoute : public RequestHandler {
+ public:
+  bool canHandle(HTTPMethod method, String uri) override {
+    if (method != HTTP_POST || uri != "/u") return false;
+    otaLock();
+    return true;
+  }
+  bool canUpload(String uri) override { return uri == "/u"; }
+  void upload(WebServer&, String, HTTPUpload&) override { handleOtaUpload(); }
+  bool handle(WebServer&, HTTPMethod, String) override {
+    handleOtaDone();
+    return true;
+  }
+};
 
 void handleCss() {
   srv().sendHeader("Cache-Control", "max-age=600");
@@ -477,8 +512,14 @@ String urlEncode(const String& v) {
 
 class LoginGate : public RequestHandler {
  public:
-  bool canHandle(HTTPMethod, String uri) override { return loginRequired(uri); }
+  bool canHandle(HTTPMethod method, String uri) override {
+    if (!loginRequired(uri)) return false;
+    // A refused upload is still read in full: protect it the same way.
+    if (method == HTTP_POST && uri == "/u") otaLock();
+    return true;
+  }
   bool handle(WebServer& s, HTTPMethod method, String uri) override {
+    otaUnlock();
     if (!s.authenticate(services::device_code::kLoginUser, services::device_code::get())) {
       if (s.hasHeader("Authorization")) {
         // Wrong password: slow down guessing a little.
@@ -529,7 +570,7 @@ void registerRoutes(WiFiManager& wm) {
   // Must be first: see the login section above. WiFiManager builds a new
   // server (and calls this) each time a portal starts; it owns the handler.
   s.addHandler(new LoginGate());
-  s.on("/u", HTTP_POST, handleOtaDone, handleOtaUpload);
+  s.addHandler(new OtaRoute());
   s.on("/pr.css", HTTP_GET, handleCss);
   s.on("/settings", HTTP_GET, [] { sendPage(pages::kSettings); });
   s.on("/airports", HTTP_GET, [] { sendPage(pages::kAirports); });
