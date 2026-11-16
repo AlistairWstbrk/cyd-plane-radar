@@ -131,6 +131,16 @@ class H(BaseHTTPRequestHandler):
         pass
 
     def send(self, code, body, ctype="application/json"):
+        # Screenshot helper (tools/guide/capture.py): ?type=INPUT_ID:text[&pick=1]
+        # types into a search box and optionally picks the first result.
+        q = parse_qs(urlparse(self.path).query)
+        if ctype == "text/html" and "type" in q and isinstance(body, str):
+            iid, _, txt = q["type"][0].partition(":")
+            js = ("<script>setTimeout(function(){var i=document.getElementById(%s);i.value=%s;"
+                  "i.dispatchEvent(new Event('input'))},300);" % (json.dumps(iid), json.dumps(txt)))
+            if "pick" in q:
+                js += "setTimeout(function(){var r=document.querySelector('.sr');if(r)r.click()},1600);"
+            body = body.replace("</body>", js + "</script></body>")
         b = body.encode() if isinstance(body, str) else body
         self.send_response(code)
         self.send_header("Content-Type", ctype)

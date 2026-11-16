@@ -476,7 +476,10 @@ void testScreens() {
   ui::navigate(ui::ScreenId::Info);
   redraw();
   savePng("60_info");
-  ui::confirmEnter("Reset Wi-Fi?", "Clears Wi-Fi, location and settings,\nthen opens the setup portal.", nullptr, ui::ScreenId::Menu);
+  ui::navigate(ui::ScreenId::Guide);
+  redraw();
+  savePng("62_guide");
+  ui::confirmEnter("Reset Wi-Fi?", "Clears Wi-Fi, location and settings,\nthen opens Wi-Fi setup.", nullptr, ui::ScreenId::Menu);
   redraw();
   savePng("61_confirm");
   tap(95, 179);

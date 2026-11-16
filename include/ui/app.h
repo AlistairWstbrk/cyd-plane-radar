@@ -7,7 +7,7 @@
 
 namespace ui {
 
-enum class ScreenId : uint8_t { Radar, List, Menu, Airports, Search, Lookup, Info, Confirm, Detail };
+enum class ScreenId : uint8_t { Radar, List, Menu, Airports, Search, Lookup, Info, Confirm, Detail, Guide };
 
 /** Initialise UI state (call after display + settings). */
 void appInit();
@@ -72,6 +72,8 @@ bool nightActive();
 
 void infoDraw(Canvas& c, void*);
 void infoTouch(const touch::Event& e);
+void guideDraw(Canvas& c, void*);
+void guideTouch(const touch::Event& e);
 
 /** Modal confirmation; `yes` runs on confirm, then returns to `back`. */
 void confirmEnter(const char* title, const char* body, void (*yes)(), ScreenId back);

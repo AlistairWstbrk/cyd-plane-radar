@@ -8,6 +8,9 @@ namespace config {
 
 constexpr char kFirmwareVersion[] = "1.1.0-cyd";
 
+/** Full user guide (PDF). Shown as a QR code under Settings > User guide. */
+constexpr char kGuideUrl[] = "https://github.com/AlistairWstbrk/cyd-plane-radar/blob/main/docs/guide.pdf";
+
 // --- Wi-Fi portal (same names as the original Plane Radar) ---
 constexpr char kPortalApName[] = "PlaneRadar-Setup";
 constexpr char kPortalIp[] = "192.168.4.1";

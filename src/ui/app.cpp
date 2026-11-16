@@ -48,6 +48,7 @@ ScreenDef def(ScreenId id) {
     case ScreenId::Search: return {searchDraw, searchTouch};
     case ScreenId::Lookup: return {lookupDraw, lookupTouch};
     case ScreenId::Info: return {infoDraw, infoTouch};
+    case ScreenId::Guide: return {guideDraw, guideTouch};
     case ScreenId::Confirm: return {confirmDraw, confirmTouch};
     case ScreenId::Detail: return {detailDraw, detailTouch};
     default: return {radarDraw, radarTouch};

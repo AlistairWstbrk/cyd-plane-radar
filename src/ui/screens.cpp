@@ -193,7 +193,7 @@ enum class Item : uint8_t {
   Range, Labels, Trails, Runways, Ground, AltColors, Sweep, Theme, Brightness,
   Dist, Alt, Speed, Alert, AlertLed, StatusLed, Clock, Flip, Invert,
   Find, Airports, Night, NightDim, NightTheme, MaxAlt, Refresh, Demo, Info,
-  Calibrate, Restart, ResetWifi,
+  Guide, Calibrate, Restart, ResetWifi,
   Count
 };
 constexpr int kTilesPerPage = 9;
@@ -228,6 +228,7 @@ const char* itemLabel(Item it) {
     case Item::Flip: return "ROTATE 180";
     case Item::Airports: return "AIRPORTS";
     case Item::Info: return "DEVICE INFO";
+    case Item::Guide: return "USER GUIDE";
     case Item::Calibrate: return "TOUCH";
     case Item::Invert: return "INVERT COLOURS";
     case Item::Refresh: return "REFRESH";
@@ -236,7 +237,7 @@ const char* itemLabel(Item it) {
     case Item::Restart: return "RESTART";
     case Item::ResetWifi: return "RESET WI-FI";
     case Item::Night: return "NIGHT MODE";
-    case Item::NightDim: return "NIGHT BRIGHTNESS";
+    case Item::NightDim: return "NIGHT DIM";
     case Item::NightTheme: return "NIGHT COLOURS";
     case Item::Find: return "FIND AIRPORT";
     default: return "";
@@ -270,6 +271,7 @@ void itemValue(Item it, char* v, size_t n) {
     case Item::Flip: onoff(c.flip); break;
     case Item::Airports: snprintf(v, n, "%u saved", static_cast<unsigned>(services::airports::count())); break;
     case Item::Info: snprintf(v, n, "IP / login"); break;
+    case Item::Guide: snprintf(v, n, "QR / PDF"); break;
     case Item::Calibrate: snprintf(v, n, "Calibrate"); break;
     case Item::Invert: onoff(c.invert); break;
     case Item::Refresh: snprintf(v, n, "%us", c.fetch_s); break;
@@ -382,6 +384,7 @@ void activate(Item it) {
     case Item::Find: searchEnter(true); return;
     case Item::Airports: navigate(ScreenId::Airports); return;
     case Item::Info: navigate(ScreenId::Info); return;
+    case Item::Guide: navigate(ScreenId::Guide); return;
     case Item::Calibrate:
       touch::calibrate();
       requestRedraw();
@@ -390,7 +393,7 @@ void activate(Item it) {
       confirmEnter("Restart?", "The radar will reboot.", doRestart, ScreenId::Menu);
       return;
     case Item::ResetWifi:
-      confirmEnter("Reset Wi-Fi?", "Clears Wi-Fi, location and settings,\nthen opens the setup portal.",
+      confirmEnter("Reset Wi-Fi?", "Clears Wi-Fi, location and settings,\nthen opens Wi-Fi setup.",
                    doResetWifi, ScreenId::Menu);
       return;
     default: return;
@@ -759,6 +762,35 @@ void infoDraw(Canvas& c, void*) {
     c.text(line, 70, 190, pal.text_dim, Font::XS, textdatum_t::top_center);
   }
   c.text("BOOT: tap = range, hold 3 s = reset", 160, 226, pal.text_dim, Font::XS, textdatum_t::middle_center);
+}
+
+// ------------------------------------------------------------------ guide ---
+
+void guideDraw(Canvas& c, void*) {
+  c.fill(pal.bg);
+  drawHeader(c, "User guide", true);
+  c.fillRect(6, 36, 156, 156, rgb(255, 255, 255));
+  c.qr(config::kGuideUrl, 9, 39, 150);
+  c.text("Scan for the full guide (PDF)", 84, 198, pal.text_dim, Font::XS, textdatum_t::top_center);
+  static const char* const kTips[][2] = {
+      {"Tap a plane", "select it"},
+      {"Tap the card", "details + overhead time"},
+      {"Hold on radar", "change labels"},
+      {"- / +", "zoom"},
+      {"Sliders icon", "settings (4 pages)"},
+      {"BOOT tap / hold 3 s", "range / reset Wi-Fi"},
+  };
+  int y = 38;
+  for (const auto& t : kTips) {
+    c.text(t[0], 172, y, pal.accent, Font::XS);
+    c.text(t[1], 172, y + 12, pal.text, Font::XS);
+    y += 27;
+  }
+  c.text("Web settings: Settings > Device info", 160, 226, pal.text_dim, Font::XS, textdatum_t::middle_center);
+}
+
+void guideTouch(const touch::Event& e) {
+  if (e.type == touch::Type::Tap && kBackBtn.hit(e.x, e.y)) navigate(ScreenId::Menu);
 }
 
 void infoTouch(const touch::Event& e) {

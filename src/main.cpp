@@ -74,7 +74,7 @@ void printHelp() {
       "  code                 print the setup Wi-Fi password / web login\n"
       "  shot                 screenshot (binary, see tools/screenshot.py)\n"
       "  tap X Y              inject a touch tap\n"
-      "  screen NAME          radar|list|menu|airports|info|search\n"
+      "  screen NAME          radar|list|menu|airports|info|guide|search\n"
       "  sim N                N simulated aircraft (0 = live)\n"
       "  range I              range preset index\n"
       "  loc LAT LON          set radar centre\n"
@@ -142,6 +142,7 @@ void runCommand(char* line) {
     else if (!strcmp(a1, "menu")) ui::navigate(ScreenId::Menu);
     else if (!strcmp(a1, "airports")) ui::navigate(ScreenId::Airports);
     else if (!strcmp(a1, "info")) ui::navigate(ScreenId::Info);
+    else if (!strcmp(a1, "guide")) ui::navigate(ScreenId::Guide);
     else if (!strcmp(a1, "search")) ui::searchEnter(true);
     Serial.println("ok screen");
   } else if (!strcmp(cmd, "find")) {

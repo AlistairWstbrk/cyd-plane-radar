@@ -7,6 +7,12 @@ same colours, rules and BOOT-button controls) and uses the bigger touchscreen fo
 
 ![Radar](docs/screenshots/20_radar_classic.png) ![Selected](docs/screenshots/21_radar_selected.png)
 
+**User guide:** [docs/guide.pdf](docs/guide.pdf) (full guide with index) and
+[docs/quick-start.pdf](docs/quick-start.pdf) (one-page card for the box; 4-up print sheet in
+`docs/quick-start-letter.pdf`). The radar shows a QR code to the guide under Settings > System >
+User guide. Rebuild them with `python tools/guide/capture.py` (needs `tools/portal_preview.py`
+running) and `python tools/guide/build_guide.py`.
+
 ## What's new compared with the original
 
 | Area | Original (1.28" round) | CYD edition |
@@ -62,7 +68,7 @@ Two panel variants exist. Pick the matching build:
 | Original CYD, one micro-USB, ILI9341 | `cyd` / `plane-radar-cyd-ili9341.bin` |
 | "CYD2USB", micro-USB + USB-C, ST7789 | `cyd2usb` / `plane-radar-cyd2usb-st7789.bin` |
 
-If the colours look like a photo negative, turn on *Invert colours* (Settings > System, or the
+If the colours look like a photo negative, turn on *Invert colours* (Settings > Units & alerts, or the
 web settings page). Serial command `panel` prints the panel ID if you are unsure.
 
 ## Flashing
