@@ -8,7 +8,7 @@ Inputs
   include/config.h             kGuideUrl: the address the QR codes point to
 
 Outputs
-  docs/guide.pdf               full guide: contents with page numbers, bookmarks, index
+  docs/guide.pdf               full guide (black and white, US Letter): contents with page numbers, bookmarks, index
   docs/quick-start.pdf         one-page card for the box (4.25 x 5.5 in)
   docs/quick-start-letter.pdf  the same card 4-up on US Letter, with cut marks
 
@@ -42,10 +42,10 @@ VERSION = re.search(r'kFirmwareVersion\[\] = "([^"]+)"', CFG)[1]
 def dev(name):
     """Device screenshot, upscaled 2x for print. Returns a file URI."""
     SHOTS.mkdir(parents=True, exist_ok=True)
-    out = SHOTS / f"dev_{name}.png"
+    out = SHOTS / f"dev_{name}_bw.png"
     src = SIM / f"{name}.png"
     if not out.exists() or out.stat().st_mtime < src.stat().st_mtime:
-        im = Image.open(src).convert("RGB")
+        im = Image.open(src).convert("L")
         im.resize((im.width * 2, im.height * 2), Image.LANCZOS).save(out, optimize=True)
     return out.as_uri()
 
@@ -54,9 +54,11 @@ def web(name, crop=None):
     """Web screenshot (optionally a vertical slice y0..y1 in source pixels)."""
     src = SHOTS / f"web_{name}.png"
     if not crop:
-        return src.as_uri()
-    out = SHOTS / f"web_{name}_{crop[0]}_{crop[1]}.png"
-    im = Image.open(src)
+        out = SHOTS / f"web_{name}_bw.png"
+        Image.open(src).convert("L").save(out, optimize=True)
+        return out.as_uri()
+    out = SHOTS / f"web_{name}_{crop[0]}_{crop[1]}_bw.png"
+    im = Image.open(src).convert("L")
     im.crop((0, crop[0], im.width, min(crop[1], im.height))).save(out, optimize=True)
     return out.as_uri()
 
@@ -77,68 +79,68 @@ CSS = """
 @page { size: Letter; margin: 0.6in 0.7in 0.75in 0.7in; }
 * { box-sizing: border-box; }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-body { font: 10.5pt/1.5 "Segoe UI", system-ui, sans-serif; color: #1a2230; margin: 0; }
-h1 { font-size: 22pt; line-height: 1.15; margin: 0 0 6pt; color: #0b1626; break-after: avoid; }
-h1 .n { color: #1f8f5f; margin-right: 8pt; }
-h2 { font-size: 13.5pt; margin: 18pt 0 4pt; color: #0b1626; break-after: avoid; }
+body { font: 10.5pt/1.5 "Segoe UI", system-ui, sans-serif; color: #000; margin: 0; }
+h1 { font-size: 22pt; line-height: 1.15; margin: 0 0 6pt; color: #000; break-after: avoid; }
+h1 .n { color: #000; margin-right: 8pt; }
+h2 { font-size: 13.5pt; margin: 18pt 0 4pt; color: #000; break-after: avoid; }
 h3 { font-size: 11pt; margin: 12pt 0 2pt; break-after: avoid; }
 p { margin: 0 0 7pt; }
 ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
 li { margin: 2pt 0; }
 a { color: inherit; text-decoration: none; }
-b, strong { color: #0b1626; }
+b, strong { color: #000; }
 .chapter { break-before: page; }
-.lead { font-size: 11.5pt; color: #3a4a60; margin-bottom: 12pt; }
-.k { display: inline-block; padding: 0 5pt; border: 1px solid #b8c4d4; border-radius: 4pt; background: #f1f5fa;
+.lead { font-size: 11.5pt; color: #333; margin-bottom: 12pt; }
+.k { display: inline-block; padding: 0 5pt; border: 1px solid #888; border-radius: 4pt; background: #f2f2f2;
      font-weight: 600; font-size: 9.5pt; line-height: 1.45; white-space: nowrap; }
-.path { font-weight: 600; color: #0b5f3f; white-space: nowrap; }
-.note { border-left: 3pt solid #1f8f5f; background: #eef8f2; padding: 6pt 10pt; margin: 8pt 0 10pt; break-inside: avoid; }
-.warn { border-left: 3pt solid #d2861a; background: #fdf5e8; padding: 6pt 10pt; margin: 8pt 0 10pt; break-inside: avoid; }
+.path { font-weight: 600; color: #000; white-space: nowrap; }
+.note { border-left: 3pt solid #000; background: #f2f2f2; padding: 6pt 10pt; margin: 8pt 0 10pt; break-inside: avoid; }
+.warn { border-left: 3pt solid #000; background: #e6e6e6; padding: 6pt 10pt; margin: 8pt 0 10pt; break-inside: avoid; }
 .row { display: flex; gap: 16pt; align-items: flex-start; margin: 8pt 0 12pt; break-inside: avoid; }
 .row > .txt { flex: 1; min-width: 0; }
 figure { margin: 0; break-inside: avoid; }
-figcaption { font-size: 8.5pt; color: #5b6b80; margin-top: 4pt; text-align: center; }
-.dev { display: inline-block; background: #20262f; padding: 7pt; border-radius: 9pt; box-shadow: 0 0 0 1pt #0d1117; }
+figcaption { font-size: 8.5pt; color: #444; margin-top: 4pt; text-align: center; }
+.dev { display: inline-block; background: #2a2a2a; padding: 7pt; border-radius: 9pt; box-shadow: 0 0 0 1pt #000; }
 .dev img { display: block; width: 3.05in; border-radius: 2pt; }
 .dev.sm img { width: 2.35in; }
-.phone { display: inline-block; background: #20262f; padding: 6pt 5pt; border-radius: 14pt; }
+.phone { display: inline-block; background: #2a2a2a; padding: 6pt 5pt; border-radius: 14pt; }
 .phone img { display: block; width: 2.2in; border-radius: 8pt; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12pt 16pt; margin: 8pt 0 12pt; }
 .grid2 figure { text-align: center; }
 table { border-collapse: collapse; width: 100%; margin: 6pt 0 12pt; font-size: 9.5pt; break-inside: auto; }
-th, td { text-align: left; vertical-align: top; padding: 4pt 6pt; border-bottom: 1px solid #dde4ee; }
-th { background: #eef2f7; font-weight: 700; color: #0b1626; }
+th, td { text-align: left; vertical-align: top; padding: 4pt 6pt; border-bottom: 1px solid #bbb; }
+th { background: #e6e6e6; font-weight: 700; color: #000; }
 tr { break-inside: avoid; }
 td:first-child { font-weight: 600; white-space: nowrap; }
 .annot { position: relative; display: inline-block; }
 .annot .pin { position: absolute; width: 15pt; height: 15pt; margin: -7.5pt 0 0 -7.5pt; border-radius: 50%;
-  background: #ffd23f; color: #000; font: 700 8.5pt/15pt "Segoe UI", sans-serif; text-align: center;
+  background: #fff; color: #000; font: 700 8.5pt/15pt "Segoe UI", sans-serif; text-align: center;
   box-shadow: 0 0 0 1.5pt #000; }
 .legend { list-style: none; padding: 0; margin: 0; }
 .legend li { display: flex; gap: 7pt; margin: 0 0 5pt; }
-.legend .pin { flex: none; width: 15pt; height: 15pt; border-radius: 50%; background: #ffd23f; color: #000;
+.legend .pin { flex: none; width: 15pt; height: 15pt; border-radius: 50%; background: #fff; color: #000;
   font: 700 8.5pt/15pt "Segoe UI", sans-serif; text-align: center; box-shadow: 0 0 0 1pt #000; margin-top: 1pt; }
 /* cover */
 .cover { height: 9.4in; display: flex; flex-direction: column; justify-content: space-between; }
-.cover .t { font-size: 34pt; font-weight: 800; color: #0b1626; margin: 0.5in 0 0; line-height: 1.05; }
-.cover .s { font-size: 14pt; color: #3a4a60; margin-top: 8pt; }
+.cover .t { font-size: 34pt; font-weight: 800; color: #000; margin: 0.5in 0 0; line-height: 1.05; }
+.cover .s { font-size: 14pt; color: #333; margin-top: 8pt; }
 .cover .hero { text-align: center; }
 .cover .hero .dev img { width: 5.2in; }
-.cover .foot { display: flex; justify-content: space-between; align-items: flex-end; font-size: 9.5pt; color: #5b6b80; }
+.cover .foot { display: flex; justify-content: space-between; align-items: flex-end; font-size: 9.5pt; color: #444; }
 .cover .foot img { width: 1.05in; display: block; }
 /* contents + index */
 .toc { break-before: page; }
 .toc ol { list-style: none; padding: 0; margin: 0; }
 .toc li { display: flex; align-items: baseline; margin: 0; }
 .toc li.c { font-weight: 700; margin-top: 5pt; font-size: 10.5pt; }
-.toc li.s { padding-left: 18pt; font-size: 9.5pt; line-height: 1.38; color: #2b3a50; }
-.toc li .dots { flex: 1; border-bottom: 1px dotted #9aa8ba; margin: 0 5pt; transform: translateY(-3pt); }
+.toc li.s { padding-left: 18pt; font-size: 9.5pt; line-height: 1.38; color: #222; }
+.toc li .dots { flex: 1; border-bottom: 1px dotted #777; margin: 0 5pt; transform: translateY(-3pt); }
 .toc li .pg { min-width: 16pt; text-align: right; font-variant-numeric: tabular-nums; }
 .index { break-before: page; }
 .index .cols { column-count: 2; column-gap: 24pt; font-size: 9.5pt; }
-.index .letter { font-weight: 800; color: #1f8f5f; margin: 8pt 0 2pt; break-after: avoid; }
+.index .letter { font-weight: 800; color: #000; margin: 8pt 0 2pt; break-after: avoid; }
 .index .e { display: flex; break-inside: avoid; }
-.index .e .dots { flex: 1; border-bottom: 1px dotted #c3ccd8; margin: 0 4pt; transform: translateY(-3pt); }
+.index .e .dots { flex: 1; border-bottom: 1px dotted #999; margin: 0 4pt; transform: translateY(-3pt); }
 """
 
 TOC = []      # (level, id, title)
@@ -742,9 +744,9 @@ def build_guide():
             continue
         r = page.rect
         page.insert_text((r.width / 2 - 8, r.height - 26), str(i + 1), fontsize=9, fontname="helv",
-                         color=(0.36, 0.42, 0.5))
+                         color=(0.3, 0.3, 0.3))
         page.insert_text((50, r.height - 26), "Plane Radar user guide", fontsize=8, fontname="helv",
-                         color=(0.6, 0.65, 0.72))
+                         color=(0.5, 0.5, 0.5))
     # Bookmarks: contents, chapters, sections, index.
     bm = [[1, "Cover", 1], [1, "Contents", 2]]
     for lvl, sid, t in TOC:
@@ -765,28 +767,28 @@ def build_guide():
 CARD_CSS = """
 * { box-sizing: border-box; }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-body { margin: 0; font: 7.9pt/1.33 "Segoe UI", system-ui, sans-serif; color: #1a2230; }
+body { margin: 0; font: 7.9pt/1.33 "Segoe UI", system-ui, sans-serif; color: #000; }
 .card { width: 4.25in; height: 5.5in; padding: 0.2in 0.22in 0.18in; display: flex; flex-direction: column; overflow: hidden; }
-.top { display: flex; align-items: center; gap: 8pt; border-bottom: 2pt solid #1f8f5f; padding-bottom: 5pt; }
-.logo { width: 22pt; height: 22pt; border-radius: 50%; border: 2.5pt solid #1f8f5f; position: relative; flex: none; }
-.logo:after { content: ""; position: absolute; left: 50%; top: 50%; width: 3pt; height: 3pt; margin: -1.5pt; border-radius: 50%; background: #1f8f5f; }
-h1 { font-size: 15pt; margin: 0; line-height: 1; color: #0b1626; }
-.sub { font-size: 8pt; color: #5b6b80; margin-top: 2pt; }
-h2 { font-size: 8.6pt; margin: 5pt 0 1.5pt; color: #0b5f3f; text-transform: uppercase; letter-spacing: .4pt; }
+.top { display: flex; align-items: center; gap: 8pt; border-bottom: 2pt solid #000; padding-bottom: 5pt; }
+.logo { width: 22pt; height: 22pt; border-radius: 50%; border: 2.5pt solid #000; position: relative; flex: none; }
+.logo:after { content: ""; position: absolute; left: 50%; top: 50%; width: 3pt; height: 3pt; margin: -1.5pt; border-radius: 50%; background: #000; }
+h1 { font-size: 15pt; margin: 0; line-height: 1; color: #000; }
+.sub { font-size: 8pt; color: #444; margin-top: 2pt; }
+h2 { font-size: 8.6pt; margin: 5pt 0 1.5pt; color: #000; text-transform: uppercase; letter-spacing: .4pt; }
 ol { margin: 0; padding-left: 13pt; }
 li { margin: 1pt 0; }
-b { color: #0b1626; }
-.k { display: inline-block; padding: 0 3pt; border: .8pt solid #b8c4d4; border-radius: 3pt; background: #f1f5fa; font-weight: 600; font-size: 7.6pt; line-height: 1.35; }
+b { color: #000; }
+.k { display: inline-block; padding: 0 3pt; border: .8pt solid #888; border-radius: 3pt; background: #f2f2f2; font-weight: 600; font-size: 7.6pt; line-height: 1.35; }
 .shot { display: flex; gap: 7pt; align-items: center; margin-top: 4pt; }
-.shot .dev { background: #20262f; padding: 3pt; border-radius: 4pt; flex: none; }
+.shot .dev { background: #2a2a2a; padding: 3pt; border-radius: 4pt; flex: none; }
 .shot .dev img { width: 1.42in; display: block; }
 .ctl { margin: 0; padding: 0; list-style: none; font-size: 7.4pt; }
 .ctl li { margin: 0 0 1.5pt; }
-.foot { margin-top: auto; display: flex; gap: 8pt; align-items: center; border-top: 1pt solid #dde4ee; padding-top: 5pt; }
+.foot { margin-top: auto; display: flex; gap: 8pt; align-items: center; border-top: 1pt solid #bbb; padding-top: 5pt; }
 .foot img { width: 0.85in; height: 0.85in; flex: none; }
 .foot .t { font-size: 7.4pt; line-height: 1.3; }
 .foot .t b { font-size: 9pt; }
-.small { font-size: 7.2pt; color: #5b6b80; }
+.small { font-size: 7.2pt; color: #444; }
 """
 
 
@@ -826,7 +828,7 @@ def build_card():
     sheet = (f"<!DOCTYPE html><html><head><meta charset='utf-8'><title>Plane Radar quick start (4-up)</title><style>"
              f"@page {{ size: 8.5in 11in; margin: 0; }}{CARD_CSS}"
              ".sheet { display: grid; grid-template-columns: 4.25in 4.25in; grid-template-rows: 5.5in 5.5in; }"
-             ".sheet .card { outline: .5pt dashed #9aa8ba; outline-offset: -0.5pt; }"
+             ".sheet .card { outline: .5pt dashed #777; outline-offset: -0.5pt; }"
              f"</style></head><body><div class='sheet'>{card_html() * 4}</div></body></html>")
     render(sheet, DOCS / "quick-start-letter.pdf")
     print("quick-start.pdf, quick-start-letter.pdf")
